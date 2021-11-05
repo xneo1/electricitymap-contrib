@@ -10,7 +10,7 @@ import requests
 # BeautifulSoup is used to parse HTML
 from bs4 import BeautifulSoup
 
-class CyprusParser:
+class GreeceParser:
     CAPACITY_KEYS = {
         'Συμβατική Εγκατεστημένη Ισχύς': 'oil',
         'Αιολική Εγκατεστημένη Ισχύς': 'wind',
@@ -26,7 +26,7 @@ class CyprusParser:
         self.logger = logger
 
     def warn(self, text: str) -> None:
-        self.logger.warning(text, extra={'key': 'CY'})
+        self.logger.warning(text, extra={'key': 'GR'})
 
     def parse_capacity(self, html) -> dict:
         capacity = {}
@@ -49,22 +49,22 @@ class CyprusParser:
                 break
             production = {}
             datum = {
-                'zoneKey': 'CY',
+                'zoneKey': 'GR',
                 'production': production,
                 'capacity': capacity,
                 'storage': {},
-                'source': 'tsoc.org.cy'
+                'source': 'admie.gr'
             }
             for col, val in zip(columns, values):
                 if col == 'Timestamp':
-                    datum['datetime'] = arrow.get(val).replace(tzinfo='Asia/Nicosia').datetime
+                    datum['datetime'] = arrow.get(val).replace(tzinfo='Europe/Athens').datetime
                 elif col == 'Αιολική Παραγωγή':
                     production['wind'] = float(val)
                 elif col == 'Συμβατική Παραγωγή':
                     production['oil'] = float(val)
                 elif col == 'Εκτίμηση Διεσπαρμένης Παραγωγής (Φωτοβολταϊκά και Βιομάζα)':
                     # Because solar is explicitly listed as "Solar PV" (so no thermal with energy storage)
-                    # and there is no sunlight between 10pm and 3am (https://www.timeanddate.com/sun/cyprus/nicosia),
+                    # and there is no sunlight between 10pm and 3am (https://www.timeanddate.com/sun/greece/athens),
                     # we use the nightly biomass+solar generation reported to determine the portion of biomass+solar
                     # which constitutes biomass.
                     value = float(val)
@@ -78,14 +78,14 @@ class CyprusParser:
 
     def fetch_production(self, target_datetime: datetime.datetime) -> list:
         if target_datetime is None:
-            url = 'https://tsoc.org.cy/electrical-system/total-daily-system-generation-on-the-transmission-system/'
+            url = 'https://www.admie.gr/agora/statistika-agoras/kyrioi-deiktes-dashboard/paragogi-ana-kaysimo-isozygio-diasyndeseon'
         else:
             # convert target datetime to local datetime
-            url_date = arrow.get(target_datetime).to('Asia/Nicosia').format('DD-MM-YYYY')
+            url_date = arrow.get(target_datetime).to('Europe/Athens').format('DD-MM-YYYY')
             url = f'https://tsoc.org.cy/electrical-system/archive-total-daily-system-generation-on-the-transmission-system/?startdt={url_date}&enddt=%2B1days'
 
         res = self.session.get(url)
-        assert res.status_code == 200, f'CY parser: GET {url} returned {res.status_code}'
+        assert res.status_code == 200, f'GR parser: GET {url} returned {res.status_code}'
 
         html = BeautifulSoup(res.text, 'lxml')
 
@@ -93,16 +93,16 @@ class CyprusParser:
         data = self.parse_production(html, capacity)
 
         if len(data) == 0:
-            self.warn('No production data returned for Cyprus')
+            self.warn('No production data returned for Greece')
         return data
 
-def fetch_production(zone_key='CY', session=None,
+def fetch_production(zone_key='GR', session=None,
         target_datetime: datetime.datetime = None,
         logger: logging.Logger = logging.getLogger(__name__)) -> dict:
     """Requests the last known production mix (in MW) of a given country."""
-    assert zone_key == 'CY'
+    assert zone_key == 'GR'
 
-    parser = CyprusParser(session or requests.session(), logger)
+    parser = GreeceParser(session or requests.session(), logger)
     return parser.fetch_production(target_datetime)
 
 
