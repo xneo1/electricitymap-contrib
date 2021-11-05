@@ -2512,7 +2512,7 @@
       "production": "ENTSOE.fetch_production",
       "productionPerModeForecast": "ENTSOE.fetch_wind_solar_forecasts"
     },
-    "timezone": null
+    "timezone": "Europe/Athens"
   },
   "GR-IS": {
     "bounding_box": [
@@ -2525,7 +2525,7 @@
         36.186957098000164
       ]
     ],
-    "timezone": null
+    "timezone": "Europe/Athens"
   },
   "GS": {
     "flag_file_name": "gs.png",
