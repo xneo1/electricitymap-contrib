@@ -1,7 +1,6 @@
 .code-push.config
 node_modules
 
-locales
 plugins
 platforms
 
@@ -12,3 +11,4 @@ ul_web_hooks/
 GoogleService-Info.plist
 google-services.json
 locales-config.json
+electricitymap.keystore
